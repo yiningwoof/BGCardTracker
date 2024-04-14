@@ -7,6 +7,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {dataExplorerLink} from '../atlasConfig.json';
 import {LogoutButton} from './LogoutButton';
 import {ItemListView} from './ItemListView';
+import LandingPage from './LandingPage';
 import {OfflineModeButton} from './OfflineModeButton';
 
 // If you're getting this app code by cloning the repository at
@@ -19,13 +20,13 @@ console.log(dataExplorerMessage);
 
 const Stack = createStackNavigator();
 
-const headerRight = () => {
-  return <OfflineModeButton />;
-};
+// const headerRight = () => {
+//   return <OfflineModeButton />;
+// };
 
-const headerLeft = () => {
-  return <LogoutButton />;
-};
+// const headerLeft = () => {
+//   return <LogoutButton />;
+// };
 
 export const App = () => {
   return (
@@ -36,12 +37,10 @@ export const App = () => {
         <NavigationContainer>
           <Stack.Navigator>
             <Stack.Screen
-              name="Your To-Do List"
-              component={ItemListView}
+              name="BG Card Tracker"
+              component={LandingPage}
               options={{
                 headerTitleAlign: 'center',
-                headerLeft,
-                headerRight,
               }}
             />
           </Stack.Navigator>

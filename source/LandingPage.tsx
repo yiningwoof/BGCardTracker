@@ -1,17 +1,16 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet} from 'react-native';
 import axios from 'axios';
-import {REACT_APP_HS_ACCESS_TOKEN} from '@env';
-import {NavigationContainer} from '@react-navigation/native';
+// import {REACT_APP_HS_ACCESS_TOKEN} from '@env';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import HerosTab from './HerosTab/HerosTab.jsx';
-import MinionsTab from './MinionsTab/MinionsTab.jsx';
-import QuestsTab from './QuestsTab/QuestsTab.jsx';
-import RewardsTab from './RewardsTab/RewardsTab.jsx';
+import HerosTab from './HerosTab/HerosTab';
+import MinionsTab from './MinionsTab/MinionsTab';
+import QuestsTab from './QuestsTab/QuestsTab';
+import RewardsTab from './RewardsTab/RewardsTab';
 
 const Tab = createBottomTabNavigator();
 
-export default function App() {
+export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [minionCards, setMinionCards] = useState([]);
   const [heroCards, setHeroCards] = useState([]);
@@ -25,7 +24,9 @@ export default function App() {
       'https://us.api.blizzard.com/hearthstone/cards?locale=en_US&gameMode=battlegrounds&pageSize=1000';
 
     const config = {
-      headers: {Authorization: `Bearer ${REACT_APP_HS_ACCESS_TOKEN}`},
+      headers: {
+        Authorization: `Bearer ${process.env.REACT_APP_HS_ACCESS_TOKEN}`,
+      },
       signal: abortController.signal,
     };
 
@@ -45,52 +46,16 @@ export default function App() {
       return cards.filter(card => card.battlegrounds.reward === true);
     };
 
-    // async function runDBUpdate(client, cards) {
-    //   try {
-    //     await client.connect();
-
-    //     await client.db('bg_card_tracker').command({ ping: 1 });
-
-    //     console.log(
-    //       'Pinged your deployment. You successfully connected to MongoDB!'
-    //     );
-    //   } finally {
-    //     await client.close();
-    //   }
-    // }
-
-    // const updateMongoDB = (cards) => {
-    //   const uri = `mongodb+srv://${REACT_APP_MONGO_DB_USERNAME}:${REACT_APP_MONGO_DB_PASSWORD}@bgcardtracker.v3cvsal.mongodb.net/?retryWrites=true&w=majority&appName=BGCardTracker`;
-
-    //   // const client = new MongoClient(uri, {
-    //   //   serverApi: {
-    //   //     version: ServerApiVersion.v1,
-    //   //     strict: true,
-    //   //     deprecationErrors: true,
-    //   //   },
-    //   // });
-    //   const user = useUser();
-    //   // const mongodb = user.mongoClient(uri, {
-    //   //     serverApi: {
-    //   //     version: ServerApiVersion.v1,
-    //   //     strict: true,
-    //   //     deprecationErrors: true,
-    //   //   },
-    //   // });
-    //   const mongodb = user.mongoClient()
-    //   runDBUpdate(client, cards).catch(console.dir);
-    // }
-
     const fetchCards = async () => {
       try {
         setIsLoading(true);
 
         console.log('fetching');
-        console.log('token', REACT_APP_HS_ACCESS_TOKEN);
+        console.log('token', process.env.REACT_APP_HS_ACCESS_TOKEN);
+        console.log('process.env', process.env);
+        console.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
         const response = await axios.get(url, config);
-
-        console.log('card response', response);
 
         if (response.status === 200) {
           console.log('response', response);
@@ -122,39 +87,37 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={{
-          tabBarStyle: {
-            backgroundColor: '#b3e0dc',
-          },
+    <Tab.Navigator
+      screenOptions={{
+        tabBarStyle: {
+          backgroundColor: '#b3e0dc',
+        },
+        tabBarIconStyle: {
+          color: 'red',
+        },
+      }}>
+      <Tab.Screen
+        name="Heros"
+        options={{
+          // tabBarLabelPosition: 'below-icon',
           tabBarIconStyle: {
             color: 'red',
           },
-        }}>
-        <Tab.Screen
-          name="Heros"
-          options={{
-            // tabBarLabelPosition: 'below-icon',
-            tabBarIconStyle: {
-              color: 'red',
-            },
-          }}
-          children={() => <HerosTab cards={heroCards} />}
-        />
-        <Tab.Screen
-          name="Minions"
-          children={() => <MinionsTab cards={minionCards} />}
-        />
-        <Tab.Screen
-          name="Quests"
-          children={() => <QuestsTab cards={questCards} />}
-        />
-        <Tab.Screen
-          name="Rewards"
-          children={() => <RewardsTab cards={rewardCards} />}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+        }}
+        children={() => <HerosTab cards={heroCards} />}
+      />
+      <Tab.Screen
+        name="Minions"
+        children={() => <MinionsTab cards={minionCards} />}
+      />
+      <Tab.Screen
+        name="Quests"
+        children={() => <QuestsTab cards={questCards} />}
+      />
+      <Tab.Screen
+        name="Rewards"
+        children={() => <RewardsTab cards={rewardCards} />}
+      />
+    </Tab.Navigator>
   );
 }
