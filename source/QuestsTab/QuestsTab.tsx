@@ -7,7 +7,7 @@ export default function QuestsTab({cards}) {
       {cards.map(card => (
         <View key={card.id}>
           <Image
-            source={card.battlegrounds.image}
+            source={{uri: card.battlegrounds.image}}
             style={{width: 300, height: 400}}
           />
           <Text>{card.name}</Text>
