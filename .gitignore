@@ -69,3 +69,7 @@ yarn-error.log
 .eslintrc.js
 .prettierrc.js
 atlasConfig.json
+# Expo
+.expo
+dist/
+web-build/
