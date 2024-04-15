@@ -57,6 +57,7 @@ export default function TierExpandable({title, cards}) {
     return types.map(type => (
       <TypeCluster
         type={type.label}
+        key={type.label}
         cards={
           type.value === -1
             ? cards.filter(card => !card.minionTypeId)

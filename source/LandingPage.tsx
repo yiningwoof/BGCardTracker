@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {StyleSheet} from 'react-native';
+import React, {useCallback, useState, useEffect} from 'react';
+import {useUser, useRealm, useQuery} from '@realm/react';
 import axios from 'axios';
 // import {REACT_APP_HS_ACCESS_TOKEN} from '@env';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -7,6 +7,8 @@ import HerosTab from './HerosTab/HerosTab';
 import MinionsTab from './MinionsTab/MinionsTab';
 import QuestsTab from './QuestsTab/QuestsTab';
 import RewardsTab from './RewardsTab/RewardsTab';
+
+import {Card} from './CardSchema';
 
 const Tab = createBottomTabNavigator();
 
@@ -17,6 +19,59 @@ export default function LandingPage() {
   const [questCards, setQuestCards] = useState([]);
   const [rewardCards, setRewardCards] = useState([]);
   const [hasError, setErrorFlag] = useState(false);
+
+  const realm = useRealm();
+  const cards = useQuery(Card).sorted('_id');
+  const user = useUser();
+
+  const createCard = useCallback(
+    ({
+      _id,
+      name,
+      minionTypeId,
+      health,
+      text,
+      image,
+      cropImage,
+    }: {
+      _id: number;
+      name: string;
+      minionTypeId: number;
+      health: number;
+      text: string;
+      image: string;
+      cropImage: string;
+    }) => {
+      // if the realm exists, create an Item
+      console.log('_id', _id);
+      console.log('name', name);
+      console.log('minionTypeId', minionTypeId);
+      console.log('health', health);
+      console.log('text', text);
+      console.log('image', image);
+      console.log('cropImage', cropImage);
+
+      // realm.write(() => {
+      //   realm.delete(cards);
+      // });
+
+      realm.write(() => {
+        console.log('writing to realm......');
+
+        return new Card(realm, {
+          _id,
+          name,
+          owner_id: user?.id,
+          minionTypeId,
+          health,
+          text,
+          image,
+          cropImage,
+        });
+      });
+    },
+    [realm, user],
+  );
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -53,12 +108,25 @@ export default function LandingPage() {
         console.log('fetching');
         console.log('token', process.env.REACT_APP_HS_ACCESS_TOKEN);
         console.log('process.env', process.env);
-        console.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
         const response = await axios.get(url, config);
 
+        console.log('first card', response.data.cards[0]);
+
+        const firstCard = response.data.cards[0];
+
+        createCard({
+          _id: firstCard.id,
+          name: firstCard.name,
+          minionTypeId: firstCard.minionTypeId,
+          health: firstCard.health,
+          text: firstCard.health,
+          image: firstCard.image,
+          cropImage: firstCard.cropImage,
+        });
+
         if (response.status === 200) {
-          console.log('response', response);
+          // console.log('response', response);
           const cards = response.data.cards;
 
           setMinionCards(minions(cards));

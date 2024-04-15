@@ -2,7 +2,6 @@ import React from 'react';
 import {StyleSheet, ScrollView, Text, View, Image} from 'react-native';
 
 export default function HerosTab({cards}) {
-  console.log('hero cards', cards);
   return (
     <ScrollView style={styles.scrollView}>
       {cards.map(card => (
