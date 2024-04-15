@@ -47,11 +47,6 @@ export const App = () => {
         </NavigationContainer>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Log in with the same account on another device or simulator to see
-            your list sync in real time.
-          </Text>
-
           {dataExplorerLink && (
             <View>
               <Text style={styles.footerText}>

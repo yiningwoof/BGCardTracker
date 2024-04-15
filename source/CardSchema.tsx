@@ -4,7 +4,7 @@ export const BattlegroundsSchema = {
   name: 'Battlegrounds',
   embedded: true,
   properties: {
-    tier: 'number?',
+    tier: 'int?',
     hero: 'bool?',
     quest: 'bool?',
     reward: 'bool?',
@@ -13,8 +13,8 @@ export const BattlegroundsSchema = {
 };
 
 export class Card extends Realm.Object<Card> {
-  _id!: BSON.ObjectId;
-  name?: string;
+  _id!: number;
+  name!: string;
   minionTypeId?: number;
   health?: number;
   attack?: number;
@@ -24,4 +24,20 @@ export class Card extends Realm.Object<Card> {
   multiClassIds?: {type: 'list'; objectType: number};
   battlegrounds?: 'Battlegrounds';
   owner_id!: string;
+
+  static schema: Realm.ObjectSchema = {
+    name: 'Card',
+    primaryKey: '_id',
+    properties: {
+      _id: {type: 'int'},
+      name: 'string',
+      minionTypeId: 'int?',
+      health: 'int?',
+      attack: 'int?',
+      text: 'string?',
+      image: 'string?',
+      cropImage: 'string?',
+      owner_id: 'string',
+    },
+  };
 }

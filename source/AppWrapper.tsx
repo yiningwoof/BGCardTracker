@@ -6,7 +6,7 @@ import {appId, baseUrl} from '../atlasConfig.json';
 import {App} from './App';
 import {WelcomeView} from './WelcomeView';
 
-import {Item} from './ItemSchema';
+import {Card} from './CardSchema';
 
 const LoadingIndicator = () => {
   return (
@@ -21,7 +21,7 @@ export const AppWrapper = () => {
     <AppProvider id={appId} baseUrl={baseUrl}>
       <UserProvider fallback={WelcomeView}>
         <RealmProvider
-          schema={[Item]}
+          schema={[Card]}
           sync={{
             flexible: true,
             onError: (_session, error) => {
