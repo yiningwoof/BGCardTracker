@@ -1,6 +1,7 @@
 import React from 'react';
 import Expandable from './Expandable';
 import TypeCluster from './TypeCluster';
+import {ICard} from '../LandingPage';
 
 const types = [
   {
@@ -52,7 +53,13 @@ const types = [
     label: 'All Type',
   },
 ];
-export default function TierExpandable({title, cards}) {
+export default function TierExpandable({
+  title,
+  cards,
+}: {
+  title: string;
+  cards: ICard[];
+}) {
   const ChildCards = () => {
     return types.map(type => (
       <TypeCluster
@@ -64,8 +71,7 @@ export default function TierExpandable({title, cards}) {
             : cards.filter(card => {
                 return (
                   (card.minionTypeId && card.minionTypeId === type.value) ||
-                  (card.multiClassIds &&
-                    card.multiClassIds.includes(type.value))
+                  (card.multiTypeIds && card.multiTypeIds.includes(type.value))
                 );
               })
         }

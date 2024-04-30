@@ -1,13 +1,14 @@
 import React from 'react';
 import {StyleSheet, ScrollView, Text, View, Image} from 'react-native';
+import {ICard} from '../LandingPage';
 
-export default function RewardsTab({cards}) {
+export default function RewardsTab({cards}: {cards: ICard[]}) {
   return (
     <ScrollView style={styles.scrollView}>
       {cards.map(card => (
-        <View key={card.id}>
+        <View key={card._id}>
           <Image
-            source={{uri: card.battlegrounds.image}}
+            source={{uri: card.battlegrounds?.image}}
             style={{width: 300, height: 400}}
           />
           <Text>{card.name}</Text>

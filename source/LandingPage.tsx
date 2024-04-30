@@ -1,5 +1,5 @@
-import React, {useCallback, useState, useEffect} from 'react';
-import {useUser, useRealm, useQuery} from '@realm/react';
+import React, {useState, useEffect, useCallback} from 'react';
+import {useUser, useRealm} from '@realm/react';
 import axios from 'axios';
 // import {REACT_APP_HS_ACCESS_TOKEN} from '@env';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -8,20 +8,47 @@ import MinionsTab from './MinionsTab/MinionsTab';
 import QuestsTab from './QuestsTab/QuestsTab';
 import RewardsTab from './RewardsTab/RewardsTab';
 
-import {Card} from './CardSchema';
+import {Card, Battleground} from './CardSchema';
+
+export interface IBattleground {
+  _id: number;
+  tier?: number;
+  hero?: boolean;
+  quest?: boolean;
+  reward?: boolean;
+  image?: string;
+  duosOnly?: boolean;
+  solosOnly?: boolean;
+}
+
+export interface ICard {
+  _id: number;
+  name: string;
+  minionTypeId?: number;
+  cardTypeId?: number;
+  health?: number;
+  attack?: number;
+  text?: string;
+  image?: string;
+  cropImage?: string;
+  multiTypeIds?: {type: 'list'; objectType: number};
+  battlegrounds?: IBattleground;
+  owner_id?: string;
+}
 
 const Tab = createBottomTabNavigator();
 
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [minionCards, setMinionCards] = useState([]);
-  const [heroCards, setHeroCards] = useState([]);
-  const [questCards, setQuestCards] = useState([]);
-  const [rewardCards, setRewardCards] = useState([]);
+  const [allCards, setAllCards] = useState<ICard[]>([]);
+  const [minionCards, setMinionCards] = useState<ICard[]>([]);
+  const [heroCards, setHeroCards] = useState<ICard[]>([]);
+  const [questCards, setQuestCards] = useState<ICard[]>([]);
+  const [rewardCards, setRewardCards] = useState<ICard[]>([]);
   const [hasError, setErrorFlag] = useState(false);
 
   const realm = useRealm();
-  const cards = useQuery(Card).sorted('_id');
+  // const cards = useQuery(Card).sorted('_id');
   const user = useUser();
 
   const createCard = useCallback(
@@ -29,44 +56,89 @@ export default function LandingPage() {
       _id,
       name,
       minionTypeId,
+      cardTypeId,
+      multiTypeIds,
       health,
       text,
       image,
       cropImage,
-    }: {
-      _id: number;
-      name: string;
-      minionTypeId: number;
-      health: number;
-      text: string;
-      image: string;
-      cropImage: string;
-    }) => {
-      // if the realm exists, create an Item
-      console.log('_id', _id);
-      console.log('name', name);
-      console.log('minionTypeId', minionTypeId);
-      console.log('health', health);
-      console.log('text', text);
-      console.log('image', image);
-      console.log('cropImage', cropImage);
+      battlegrounds,
+    }: ICard) => {
+      const relatedBg = realm.objectForPrimaryKey(Battleground, _id); // search for a realm object with a primary key that is an objectId
+      if (relatedBg) {
+        realm.write(() => {
+          realm.create('Card', {
+            _id: _id,
+            name: name,
+            minionTypeId: minionTypeId,
+            cardTypeId: cardTypeId,
+            multiTypeIds: multiTypeIds,
+            health: health,
+            text: text,
+            image: image,
+            cropImage: cropImage,
+            battlegrounds: battlegrounds,
+            owner_id: user.id,
+          });
+        });
+      } else {
+        realm.write(() => {
+          realm.create('Card', {
+            _id: _id,
+            name: name,
+            minionTypeId: minionTypeId,
+            cardTypeid: cardTypeId,
+            multiTypeIds: multiTypeIds,
+            health: health,
+            text: text,
+            image: image,
+            cropImage: cropImage,
+            owner_id: user.id,
+          });
+        });
+      }
+    },
+    [realm, user],
+  );
 
-      // realm.write(() => {
-      //   realm.delete(cards);
-      // });
+  const deleteBattleground = useCallback(
+    (id: number) => {
+      const bg = realm.objectForPrimaryKey(Battleground, id); // search for a realm object with a primary key that is an objectId
+      if (bg) {
+        realm.write(() => {
+          realm.delete(bg);
+        });
+        console.log('bg delete successful!');
+      }
+    },
+    [realm],
+  );
 
+  const deleteCard = useCallback(
+    (id: number) => {
+      const card = realm.objectForPrimaryKey(Card, id); // search for a realm object with a primary key that is an objectId
+      if (card) {
+        realm.write(() => {
+          realm.delete(card);
+        });
+        console.log('card delete successful!');
+      }
+    },
+    [realm],
+  );
+
+  const createBattleground = useCallback(
+    ({_id, hero, quest, reward, duosOnly, solosOnly, image}: IBattleground) => {
       realm.write(() => {
-        console.log('writing to realm......');
-
-        return new Card(realm, {
-          _id,
-          name,
-          owner_id: user?.id,
-          minionTypeId,
-          health,
-          text,
-          image,
-          cropImage,
+        realm.create('Battleground', {
+          _id: _id,
+          hero: hero,
+          quest: quest,
+          reward: reward,
+          duosOnly: duosOnly,
+          solosOnly: solosOnly,
+          image: image,
+          owner_id: user.id,
         });
       });
     },
@@ -85,20 +157,20 @@ export default function LandingPage() {
       signal: abortController.signal,
     };
 
-    const minions = cards => {
+    const minions = (cards: ICard[]): ICard[] => {
       return cards.filter(card => card.cardTypeId === 4);
     };
 
-    const heros = cards => {
+    const heros = (cards: ICard[]): ICard[] => {
       return cards.filter(card => card.cardTypeId === 3);
     };
 
-    const quests = cards => {
-      return cards.filter(card => card.battlegrounds.quest === true);
+    const quests = (cards: ICard[]): ICard[] => {
+      return cards.filter(card => card.battlegrounds?.quest === true);
     };
 
-    const rewards = cards => {
-      return cards.filter(card => card.battlegrounds.reward === true);
+    const rewards = (cards: ICard[]): ICard[] => {
+      return cards.filter(card => card.battlegrounds?.reward === true);
     };
 
     const fetchCards = async () => {
@@ -106,36 +178,47 @@ export default function LandingPage() {
         setIsLoading(true);
 
         console.log('fetching');
-        console.log('token', process.env.REACT_APP_HS_ACCESS_TOKEN);
+        console.log('auth token', process.env.REACT_APP_HS_ACCESS_TOKEN);
         console.log('process.env', process.env);
 
         const response = await axios.get(url, config);
 
-        console.log('first card', response.data.cards[0]);
-
-        const firstCard = response.data.cards[0];
-
-        createCard({
-          _id: firstCard.id,
-          name: firstCard.name,
-          minionTypeId: firstCard.minionTypeId,
-          health: firstCard.health,
-          text: firstCard.health,
-          image: firstCard.image,
-          cropImage: firstCard.cropImage,
-        });
-
         if (response.status === 200) {
-          // console.log('response', response);
           const cards = response.data.cards;
 
-          setMinionCards(minions(cards));
-          setHeroCards(heros(cards));
-          setQuestCards(quests(cards));
-          setRewardCards(rewards(cards));
+          const typedCards = cards.map((card: any) => {
+            const newBg: IBattleground = {
+              _id: card.id,
+              tier: card.battlegrounds.tier,
+              hero: card.battlegrounds.hero,
+              quest: card.battlegrounds.quest,
+              reward: card.battlegrounds.reward,
+              image: card.battlegrounds.image,
+              duosOnly: card.battlegrounds.duosOnly,
+              solosOnly: card.battlegrounds.solosOnly,
+            };
+            const newCd: ICard = {
+              _id: card.id,
+              name: card.name,
+              minionTypeId: card.minionTypeId,
+              cardTypeId: card.cardTypeId,
+              multiTypeIds: card.multiTypeIds,
+              health: card.health,
+              attack: card.attack,
+              text: card.text,
+              image: card.image,
+              cropImage: card.cropImage,
+              battlegrounds: newBg,
+            };
+            return newCd;
+          });
+          setAllCards(typedCards);
+          setMinionCards(minions(typedCards));
+          setHeroCards(heros(typedCards));
+          setQuestCards(quests(typedCards));
+          setRewardCards(rewards(typedCards));
           setIsLoading(false);
 
-          // updateMongoDB(cards);
           return;
         } else {
           throw new Error('Failed to fetch cards');
@@ -150,9 +233,65 @@ export default function LandingPage() {
     };
 
     fetchCards();
-
-    return () => abortController.abort('Data fetching cancelled');
   }, []);
+
+  const batchDelete = useCallback(
+    (cards: ICard[]) => {
+      cards.forEach(card => {
+        const bg = realm.objectForPrimaryKey(Battleground, card._id);
+        if (bg) {
+          deleteBattleground(card._id);
+        }
+        const cd = realm.objectForPrimaryKey(Card, card._id);
+
+        if (cd) {
+          deleteCard(card._id);
+        }
+      });
+    },
+    [deleteBattleground, deleteCard, realm],
+  );
+
+  const batchCreate = useCallback(
+    (cards: ICard[]) => {
+      cards.forEach(card => {
+        const bg = realm.objectForPrimaryKey(Battleground, card._id);
+        if (!bg) {
+          const newBg: IBattleground = {
+            _id: card._id,
+            hero: card.battlegrounds?.hero,
+            quest: card.battlegrounds?.quest,
+            reward: card.battlegrounds?.reward,
+            duosOnly: card.battlegrounds?.duosOnly,
+            solosOnly: card.battlegrounds?.solosOnly,
+            image: card.battlegrounds?.image,
+          };
+          createBattleground(newBg);
+        }
+        const cd = realm.objectForPrimaryKey(Card, card._id);
+        if (!cd) {
+          const newCd: ICard = {
+            _id: card._id,
+            name: card.name,
+            minionTypeId: card.minionTypeId,
+            cardTypeId: card.cardTypeId,
+            multiTypeIds: card.multiTypeIds,
+            health: card.health,
+            text: card.text,
+            image: card.image,
+            cropImage: card.cropImage,
+          };
+          createCard(newCd);
+        }
+      });
+    },
+    [createBattleground, createCard, realm],
+  );
+
+  useEffect(() => {
+    // batchDelete(allCards);
+    batchCreate(allCards);
+  }, [allCards, batchCreate, batchDelete]);
 
   return (
     <Tab.Navigator
