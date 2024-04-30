@@ -6,7 +6,7 @@ import {appId, baseUrl} from '../atlasConfig.json';
 import {App} from './App';
 import {WelcomeView} from './WelcomeView';
 
-import {Card} from './CardSchema';
+import {Card, Battleground} from './CardSchema';
 
 const LoadingIndicator = () => {
   return (
@@ -21,9 +21,25 @@ export const AppWrapper = () => {
     <AppProvider id={appId} baseUrl={baseUrl}>
       <UserProvider fallback={WelcomeView}>
         <RealmProvider
-          schema={[Card]}
+          schema={[Card, Battleground]}
           sync={{
             flexible: true,
+            initialSubscriptions: {
+              update(subs, realm) {
+                subs.add(realm.objects(Card));
+                subs.add(realm.objects(Battleground));
+              },
+            },
+            clientReset: {
+              mode: Realm.ClientResetMode.RecoverOrDiscardUnsyncedChanges,
+              onBefore: realm => {
+                console.log('Beginning client reset for ', realm.path);
+              },
+              onAfter: (beforeRealm, afterRealm) => {
+                console.log('Finished client reset for', beforeRealm.path);
+                console.log('New realm path', afterRealm.path);
+              },
+            },
             onError: (_session, error) => {
               // Show sync errors in the console
               console.error(error);
