@@ -14,6 +14,11 @@ export default function Expandable({
   children,
   isCardExpandable,
   imageBackgroundSrc,
+}: {
+  title: string;
+  children: Element;
+  isCardExpandable?: boolean;
+  imageBackgroundSrc?: string;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -66,13 +71,13 @@ export default function Expandable({
               opacity: 0.8,
               position: 'absolute',
             }}>
-            {/* <LinearGradient
+            <LinearGradient
               colors={['black', '#303030', 'transparent']}
               style={{flex: 1, justifyContent: 'center'}}
               start={[0, 1]}
               end={[1, 0]}
               locations={[0.1, 0.5, 1]}
-            /> */}
+            />
           </ImageBackground>
         ) : (
           <ImageBackground
